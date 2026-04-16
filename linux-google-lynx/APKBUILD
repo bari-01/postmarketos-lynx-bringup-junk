@@ -1,0 +1,75 @@
+# Reference: <https://postmarketos.org/vendorkernel>
+# Kernel config based on: arch/arm64/configs/lynx_defconfig
+
+maintainer=""
+pkgname=linux-google-lynx
+pkgver=6.1.124
+pkgrel=0
+pkgdesc="Google Pixel 7a (Lynx) kernel"
+arch="aarch64"
+_carch="arm64"
+_flavor="google-lynx"
+url="https://github.com/google/kernel-lynx"
+license="GPL-2.0-only"
+options="!strip !check !tracedeps pmb:cross-native"
+makedepends="
+	bash
+	bc
+	bison
+	devicepkg-dev
+	findutils
+	flex
+	android-tools
+	openssl-dev
+	perl
+	python3
+	xz
+	linux-headers
+	elfutils-dev
+	zlib-dev
+	pahole
+"
+
+# Source
+# The kernel source tarball is the out/lynx-kernel tree produced by extract_lynx.sh.
+# To host locally for development:  ./package_lynx.sh && python3 -m http.server 8080
+# Replace _tarball_url with a real URL once hosted (e.g. GitHub release, self-hosted).
+_tarball_url="http://10.20.50.113:8080/${pkgname}-${pkgver}.tar.gz"
+_config="config-$_flavor.$arch"
+
+source="
+	${pkgname}-${pkgver}.tar.gz::${_tarball_url}
+	$_config
+"
+_outdir="out"
+
+prepare() {
+	default_prepare
+
+	# Fix missing asm headers for host tools (like resolve_btfids)
+	# by linking to the chroot's native headers.
+	rm -rf "$builddir/tools/include/uapi/asm"
+	ln -sf /usr/include/asm "$builddir/tools/include/uapi/asm"
+
+	make ARCH=arm64 mrproper
+	# REPLACE_GCCH=0 prevents breaking compiler-gcc.h on modern kernels
+	REPLACE_GCCH=0 . downstreamkernel_prepare
+}
+
+build() {
+	unset LDFLAGS
+	make -j24 O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1))-postmarketOS"
+}
+
+package() {
+	downstreamkernel_package "$builddir" "$pkgdir" "$_carch" \
+		"$_flavor" "$_outdir"
+	make dtbs_install O="$_outdir" ARCH="$_carch" \
+		INSTALL_DTBS_PATH="$pkgdir/boot/dtbs"
+}
+
+sha512sums="
+6d4ae41d2c9235c56d4271bd73d30a537f9e568e30e317ca3b73c3daf80a5a6bb76466d3beca5b469869e693d51a48b5f2891bb45f7894c0df5e87e03b0f1b4f  linux-google-lynx-6.1.124.tar.gz
+2591b5a79416f9392853ea5e37e4746287e0562cee52754361429188ee82abcae3cd18ef5f67a002d581efa8aaf4d61f78ab389858e97d894a97289c4f6cc149  config-google-lynx.aarch64
+"

@@ -1,0 +1,39 @@
+# Reference: <https://postmarketos.org/devicepkg>
+maintainer=""
+pkgname=device-google-lynx
+pkgdesc="Google Pixel 7a"
+pkgver=1
+pkgrel=3
+url="https://postmarketos.org"
+license="MIT"
+arch="aarch64"
+options="!check !archcheck"
+depends="
+	linux-google-lynx
+	mkbootimg
+	android-tools
+	postmarketos-base
+	postmarketos-base-downstream
+"
+makedepends="devicepkg-dev"
+source="
+	deviceinfo
+	modules-initfs
+"
+
+build() {
+	devicepkg_build $startdir $pkgname
+}
+
+package() {
+	devicepkg_package $startdir $pkgname
+	# Create a dummy DTB since the kernel extraction script skipped building the Lynx dtb,
+	# and mkbootimg requires the --dtb flag for header versions > 2 to not be empty.
+	install -d "$pkgdir"/boot/dtbs
+	touch "$pkgdir"/boot/dtbs/dummy.dtb
+}
+
+sha512sums="
+d5edb8d621fc914a8272cc7ecfa9377e3e37683f9d7e3030243b49569435694a015d79c7eff420a7593d6797a49f8acd6c7bb4532542b54dd8525f91a993b7c2  deviceinfo
+e70bae17df23dcaaaea0e2d3616556f04baa23f8ee1357785c0f539bf97282d8ddff53953e155b72689bb73beb38c2da3d08de2a61e866684edfa10a6593885d  modules-initfs
+"

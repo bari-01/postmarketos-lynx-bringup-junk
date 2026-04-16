@@ -19,17 +19,15 @@
 8. Make it work (search "pixel sbu usbc" and buy a uart adapter)
 9. Run `pmbootstrap install`
 ### Flashing
-10. Unlock your pixel: (Will reset device)
-    
-10a. Go to developer options, enable unlocking
+Unlock your pixel (Will reset device): Go to developer options, enable "OEM unlocking",
 
-10b. Boot to fastboot (adb reboot fastboot or power + vol. down from powered off state) and:
+10. Boot to fastboot (adb reboot fastboot or power + vol. down from powered off state) and:
     ```
     fastboot flashing unlock
     fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img # Use the path of vbmeta from step 3
     ```
     
-11. FLash pmos
+11. Flash pmos
     ```
     pmbootstrap flasher flash_rootfs
     pmbootstrap flasher flash_kernel
